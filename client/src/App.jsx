@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Shop from "./pages/Shop";
+import Cart from "./pages/Cart";
+import Wishlist from "./pages/Wishlist";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import Support from "./pages/Support";
 
 function App() {
   const [data, setData] = useState(null);
@@ -13,9 +20,19 @@ function App() {
   }, []);
 
   return (
-    <div className="w-full min-h-screen">
-      <Home />
-    </div>
+    <Router>
+      <div className="w-full min-h-screen">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/support" element={<Support />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
