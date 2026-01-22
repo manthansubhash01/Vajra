@@ -2,17 +2,17 @@ const mongoose = require("mongoose");
 
 const variantSchema = new mongoose.Schema({
     sku: {
-        type: String,        
+        type: String,
         unique: true,
         sparse: true
     },
 
-    size: String,   
-    color: String, 
-    flavor: String, 
-    weight: String, 
-    material: String,  
-    resistance_level: String, 
+    size: String,
+    color: String,
+    flavor: String,
+    weight: String,
+    material: String,
+    resistance_level: String,
 
     price: {
         type: Number,
@@ -25,15 +25,20 @@ const variantSchema = new mongoose.Schema({
     },
 
     images: [String]
-    }, { _id: false });
 
+}, { _id: false });
 
 const productSchema = new mongoose.Schema({
 
     name: {
         type: String,
         required: true,
-        index: true
+        trim: true
+    },
+
+    slug: {
+        type: String,
+        unique: true
     },
 
     description: {
@@ -48,16 +53,12 @@ const productSchema = new mongoose.Schema({
         index: true
     },
 
-    brand: String,
-
-    basePrice: Number,
+    brand: {
+        type: String,
+        index: true
+    },
 
     images: [String],
-
-    stock: {
-        type: Number,
-        default: 0
-    },
 
     gender: {
         type: String,
@@ -66,6 +67,22 @@ const productSchema = new mongoose.Schema({
 
     variants: [variantSchema],
 
+    minPrice: {
+        type: Number,
+        index: true
+    },
+
+    maxPrice: {
+        type: Number,
+        index: true
+    },
+
+    totalStock: {
+        type: Number,
+        default: 0,
+        index: true
+    },
+
     attributes: {
         type: Map,
         of: String
@@ -73,7 +90,8 @@ const productSchema = new mongoose.Schema({
 
     rating: {
         type: Number,
-        default: 0
+        default: 0,
+        index: true
     },
 
     numReviews: {
@@ -83,16 +101,36 @@ const productSchema = new mongoose.Schema({
 
     totalSold: {
         type: Number,
-        default: 0
+        default: 0,
+        index: true
+    },
+
+    isFeatured: {
+        type: Boolean,
+        default: false
     },
 
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
+        index: true
     }
 
-    }, {
-        timestamps: true
-    });
+}, {
+    timestamps: true
+});
+
+
+productSchema.index({
+    name: "text",
+    description: "text",
+    brand: "text",
+    category: "text",
+    "variants.flavor": "text",
+    "variants.weight": "text",
+    "variants.material": "text",
+    "variants.resistance_level": "text"
+});
+
 
 module.exports = mongoose.model("Product", productSchema);
