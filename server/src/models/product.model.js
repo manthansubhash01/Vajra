@@ -133,4 +133,17 @@ productSchema.index({
 });
 
 
+
+// productSchema.index({
+//     name: "text",
+//     description: "text",
+//     brand: "text",
+//     category: "text",
+//     "variants.flavor": "text",
+//     "variants.weight": "text",
+//     "variants.material": "text",
+//     "variants.resistance_level": "text"
+// });
+
+
 module.exports = mongoose.model("Product", productSchema);

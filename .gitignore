@@ -6,4 +6,8 @@ build
 coverage
 .vercel
 
+<<<<<<< HEAD
 seed/
+=======
+server/seed/
+>>>>>>> feature/product
