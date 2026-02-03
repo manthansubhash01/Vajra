@@ -70,6 +70,24 @@ const addToCart = async (req, res) => {
     }
 };
 
+const getCart = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).populate("cart.product");
+
+        if (!user) {
+        return res.status(404).json({ message: "User not found" });
+        }
+
+        return res.status(200).json({
+        cart: user.cart,
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Failed to get cart" });
+    }
+};
+
 module.exports = {
     addToCart,
+    getCart,
 };
