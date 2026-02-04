@@ -22,29 +22,35 @@ Unlike traditional e-commerce platforms, VAJRA focuses on:
 
 ### 3.1 Product Discovery
 - Category-wise browsing (Supplements, Accessories, Wear)
-- Advanced filters (price, goal, diet, experience level)
+- Advanced filters (price, diet, size)
 - Smart search with typo tolerance and suggestions
 
 ### 3.2 Personalization
-- Wishlist to save products
-- User fitness profile (goal, experience, diet)
+- User fitness profile (goal, diet)
 - Personalized home feed
 
 ### 3.3 Recommendation System (ML)
 - Product recommendations based on:
   - User behavior (views, cart, wishlist)
-  - Fitness goals
   - Similar user patterns
 - Content-based + collaborative filtering approach
-- Separate ML service for scalability
 
 ### 3.4 Shopping Experience
 - Cart management
-- Wishlist
+- Wishlist management
 - Product comparison
 - Product reviews & ratings
-- Clean, responsive UI
 
+## 3.5 AI Chatbot Assistance
+- Resolve user query 
+- Direct user to required services
+
+## 3.6 Order Management
+- Track order
+- Order history
+
+## 3.7 Returns & Refunds system
+- 
 ---
 
 ## 4. Target Users
@@ -74,6 +80,9 @@ Unlike traditional e-commerce platforms, VAJRA focuses on:
 ### Machine Learning
 - Python (recommendation engine)
 - Content-based + collaborative filtering
+
+### others
+- LLM service
 
 ---
 
