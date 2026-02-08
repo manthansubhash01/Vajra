@@ -14,7 +14,11 @@ const authenticate = async(req, res, next) => {
             res.status(400).json({ message : "Password is required"});
         }
 
-        const user  = await User.find({name : name, phone : phone})
+        const user = await User.findOne({ name, phone });
+        if (!user) {
+        return res.status(400).json({ message: "User not found" });
+        }
+
         const isCorrectPassword = await bcrypt.compare(password, user.password);
 
         if(!isCorrectPassword){
