@@ -4,6 +4,8 @@ const authRoutes = require("./routes/auth.routes");
 const profileRoutes = require("./routes/profile.routes");
 const wishlistRoutes = require("./routes/wishlistList.routes");
 const cartRoutes = require("./routes/cart.routes");
+const orderRoutes = require("./routes/order.routes");
+const returnRoutes = require("./routes/return.routes");
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/returns", returnRoutes);
 
 // Health Check Route
 app.get("/api/health", (req, res) => {
