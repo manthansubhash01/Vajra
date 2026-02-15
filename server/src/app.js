@@ -6,10 +6,10 @@ const wishlistRoutes = require("./routes/wishlistList.routes");
 const cartRoutes = require("./routes/cart.routes");
 const orderRoutes = require("./routes/order.routes");
 const returnRoutes = require("./routes/return.routes");
+const productRoutes = require("./routes/product.routes");
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -19,8 +19,8 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/returns", returnRoutes);
+app.use("/api", productRoutes);
 
-// Health Check Route
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
@@ -29,7 +29,6 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Root Route (optional, just to show something)
 app.get("/", (req, res) => {
   res.send("ShopSmart Backend Service");
 });
