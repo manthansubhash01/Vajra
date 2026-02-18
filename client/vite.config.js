@@ -1,24 +1,22 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
-// https://vitejs.dev/config/
+const backendUrl = process.env.VITE_DEV_PROXY_TARGET || "http://localhost:8080";
+
 export default defineConfig({
-    plugins: [
-        react(),
-        tailwindcss(),
-    ],
-    server: {
-        proxy: {
-            '/api': {
-                target: 'http://localhost:5001',
-                changeOrigin: true,
-            }
-        }
+  plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      "/api": {
+        target: backendUrl,
+        changeOrigin: true,
+      },
     },
-    test: {
-        globals: true,
-        environment: 'jsdom',
-        setupFiles: './src/setupTests.js',
-    },
-})
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.js",
+  },
+});

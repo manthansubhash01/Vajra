@@ -7,6 +7,8 @@ import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
+import Orders from "./pages/Orders";
+import Returns from "./pages/Returns";
 
 function App() {
   const [data, setData] = useState(null);
@@ -30,6 +32,10 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders/:orderId" element={<Orders />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/returns/new" element={<Returns />} />
         </Routes>
       </div>
     </Router>
