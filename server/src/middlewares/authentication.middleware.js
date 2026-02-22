@@ -7,22 +7,25 @@ const authenticate = async(req, res, next) => {
         const {name, phone, password} = req.body;
 
         if(!name && !phone){
-            res.status(400).json({ message : "Either name or phone is required"});
+            return res.status(400).json({ message : "Either name or phone is required"});
         }
 
         if(!password){
-            res.status(400).json({ message : "Password is required"});
+            return res.status(400).json({ message : "Password is required"});
         }
 
-        const user = await User.findOne({ name, phone });
+        const user = await User.findOne({
+            $or: [{ name }, { phone }]
+        });
+
         if (!user) {
-        return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found" });
         }
 
         const isCorrectPassword = await bcrypt.compare(password, user.password);
 
         if(!isCorrectPassword){
-            res.status(400).json({ message: "Incorrect password please try again with correct one"});
+            return res.status(400).json({ message: "Incorrect password please try again with correct one"});
         }
 
         req.body.user = user
@@ -30,7 +33,7 @@ const authenticate = async(req, res, next) => {
         next();
     }catch(err){
         console.log(err);
-        res.status(500).json({ message : "Failed to authenticate user"})
+        return res.status(500).json({ message : "Failed to authenticate user"})
     }
 }
 
