@@ -7,11 +7,11 @@ const register = async(req,res) => {
         const {name, password, age, phone, email, address} = req.body;
 
         if(!name || !password || !age || !phone || !email || !address){
-            res.status(400).json({ message : "All fields are required"});
+            return res.status(400).json({ message : "All fields are required"});
         };
 
         if(!email.includes("@")){
-            res.status(400).json({ message : "Email is not valid"});
+            return res.status(400).json({ message : "Email is not valid"});
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -27,30 +27,50 @@ const register = async(req,res) => {
 
         await newUser.save();
 
-        res.status(201).json({ message : "User registered successfully"});
+        return res.status(201).json({ message : "User registered successfully"});
     }catch(err){
         console.log(err)
-        res.status(500).json({ message : "Faild to register user try again"});
+        return res.status(500).json({ message : "Faild to register user try again"});
     }
 };
 
-const login = async(req, res) => {
-    try{
-        const user = req.body.user;
+const login = async (req, res) => {
+    try {
+        const { name, phone, password } = req.body;
 
-        const secretKey = process.env.JWT_SECRET;
-        const token = await jwt.sign(
-            { id: user._id, name: user.name },
-            secretKey,
-            {expiresIn : '24h'}
-        )
+        if ((!name && !phone) || !password) {
+        return res.status(400).json({
+            message: "Name or phone and password are required",
+        });
+        }
 
-        res.status(200).josn({ token : token})
+        const user = await User.findOne({
+        $or: [{ name }, { phone }],
+        });
 
-    }catch(err){
-        console.log(err)
-        res.status(500).json({ message : "Failed to login user try again"})
+        if (!user) {
+        return res.status(400).json({ message: "User not found" });
+        }
+
+        const isCorrectPassword = await bcrypt.compare(password, user.password);
+
+        if (!isCorrectPassword) {
+        return res.status(400).json({ message: "Incorrect password" });
+        }
+
+        const token = jwt.sign(
+        { id: user._id, name: user.name },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+        );
+
+        return res.status(200).json({ token });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+        message: "Failed to login user try again",
+        });
     }
-}
+};
 
 module.exports = {register, login};
