@@ -9,6 +9,12 @@ import Settings from "./pages/Settings";
 import Support from "./pages/Support";
 import Orders from "./pages/Orders";
 import Returns from "./pages/Returns";
+import ProductDetails from "./pages/ProductDetails";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import InterestOnboarding from "./pages/InterestOnboarding";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   const [data, setData] = useState(null);
@@ -22,23 +28,92 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="w-full min-h-screen">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/orders/:orderId" element={<Orders />} />
-          <Route path="/returns" element={<Returns />} />
-          <Route path="/returns/new" element={<Returns />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="w-full min-h-screen">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:slug" element={<ProductDetails />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/onboarding/interests"
+              element={
+                <ProtectedRoute>
+                  <InterestOnboarding />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Cart />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Wishlist />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/support" element={<Support />} />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Orders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:orderId"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Orders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/returns"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Returns />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/returns/new"
+              element={
+                <ProtectedRoute requiresInterests>
+                  <Returns />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
