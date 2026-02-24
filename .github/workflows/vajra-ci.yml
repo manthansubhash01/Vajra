@@ -14,6 +14,17 @@ jobs:
       matrix:
         node-version: [18.x, 20.x, 22.x]
 
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -32,3 +43,5 @@ jobs:
       - name: Run Tests
         working-directory: ./server
         run: npm test
+        env:
+          MONGO_URI_TEST: mongodb://localhost:27017/vajra_test
