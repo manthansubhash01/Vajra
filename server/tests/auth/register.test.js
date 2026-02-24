@@ -4,26 +4,22 @@ const app = require("../../src/app");
 const User = require("../../src/models/user.model");
 
 describe("Register API", () => {
-
     beforeEach(async () => {
         await User.deleteMany();
     });
 
     afterAll(async () => {
         await mongoose.connection.dropDatabase();
-        await mongoose.connection.close();
     });
 
     test("Should register user successfully", async () => {
-        const res = await request(app)
-        .post("/api/auth/register")
-        .send({
-            name: "Test User",
-            password: "Test@432",
-            age: 20,
-            phone: "0090234456",
-            email: "test@example.com",
-            address: "test address",
+        const res = await request(app).post("/api/auth/register").send({
+        name: "Test User",
+        password: "Test@432",
+        age: 20,
+        phone: "0090234456",
+        email: "test@example.com",
+        address: "test address",
         });
 
         expect(res.statusCode).toBe(201);
@@ -31,13 +27,11 @@ describe("Register API", () => {
     });
 
     test("Missing Field", async () => {
-        const res = await request(app)
-        .post("/api/auth/register")
-        .send({
-            name: "Test User",
-            password: "Test@432",
-            age: 20,
-            address: "test address",
+        const res = await request(app).post("/api/auth/register").send({
+        name: "Test User",
+        password: "Test@432",
+        age: 20,
+        address: "test address",
         });
 
         expect(res.statusCode).toBe(400);
@@ -45,9 +39,7 @@ describe("Register API", () => {
     });
 
     test("Invalid email", async () => {
-        const res = await request(app)
-        .post("/api/auth/register")
-        .send({
+        const res = await request(app).post("/api/auth/register").send({
             name: "Test User",
             password: "Test@432",
             age: 20,
@@ -59,5 +51,4 @@ describe("Register API", () => {
         expect(res.statusCode).toBe(400);
         expect(res.body.message).toBe("Email is not valid");
     });
-
 });
