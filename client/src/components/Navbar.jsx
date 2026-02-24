@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingCart,
@@ -10,27 +10,55 @@ import {
   Menu,
   X,
   Sparkles,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const getSuggestionImage = (suggestion) =>
   suggestion.images?.[0] || suggestion.variants?.[0]?.images?.[0] || "";
 
 const Navbar = () => {
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
 
   const desktopSearchRef = useRef(null);
   const mobileSearchRef = useRef(null);
   const requestIdRef = useRef(0);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, token, logout } = useAuth();
+  const isHomePage = location.pathname === "/";
+
+  const navShellClass = isHomePage
+    ? "absolute left-0 right-0 top-0 z-50"
+    : "sticky left-0 right-0 top-0 z-50 border-b border-[#d7e2da] bg-[#eff3ee]/92 backdrop-blur-xl";
+
+  const logoClass = isHomePage
+    ? "text-2xl font-bold text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.9)] [text-shadow:2px_2px_4px_rgb(0_0_0/80%)] md:text-3xl"
+    : "text-2xl font-bold text-[#0f2d2c] md:text-3xl";
+
+  const iconWrapClass = isHomePage
+    ? "p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
+    : "p-2.5 bg-white/85 hover:bg-white rounded-full transition-all group relative shadow-[0_8px_20px_rgba(15,23,42,0.12)] border border-[#d6dfd8]";
+
+  const iconClass = isHomePage
+    ? "w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]"
+    : "w-5 h-5 text-[#314343] group-hover:text-[#124b4a] transition-colors";
+
+  const tooltipClass = isHomePage
+    ? "absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+    : "absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-[#163338] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap";
 
   const trimmedQuery = useMemo(() => query.trim(), [query]);
-  const isSearchOpen = searchFocused || trimmedQuery.length > 0;
+  const isSearchOpen = showSuggestions;
 
   const runSearch = async (keyword) => {
     const cleanKeyword = keyword.trim();
@@ -84,12 +112,68 @@ const Navbar = () => {
   }, [trimmedQuery]);
 
   useEffect(() => {
+    const refreshCounts = async () => {
+      if (!isAuthenticated || !token) {
+        setWishlistCount(0);
+        setCartCount(0);
+        return;
+      }
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "";
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [wishlistResponse, cartResponse] = await Promise.all([
+          fetch(`${apiUrl}/api/wishlist`, { headers }),
+          fetch(`${apiUrl}/api/cart`, { headers }),
+        ]);
+
+        const wishlistPayload = await wishlistResponse.json();
+        const cartPayload = await cartResponse.json();
+
+        if (wishlistResponse.ok) {
+          setWishlistCount((wishlistPayload.wishlist || []).length);
+        }
+
+        if (cartResponse.ok) {
+          const totalCartUnits = (cartPayload.cart || []).reduce(
+            (total, item) => total + Number(item.quantity || 0),
+            0,
+          );
+          setCartCount(totalCartUnits);
+        }
+      } catch {
+        // Keep previous badge values when request fails.
+      }
+    };
+
+    const handleWishlistChanged = () => refreshCounts();
+    const handleCartChanged = () => refreshCounts();
+
+    refreshCounts();
+    window.addEventListener("vajra-wishlist-changed", handleWishlistChanged);
+    window.addEventListener("vajra-cart-changed", handleCartChanged);
+
+    return () => {
+      window.removeEventListener(
+        "vajra-wishlist-changed",
+        handleWishlistChanged,
+      );
+      window.removeEventListener("vajra-cart-changed", handleCartChanged);
+    };
+  }, [isAuthenticated, token, location.pathname]);
+
+  const cartBadgeText = cartCount > 99 ? "99+" : String(cartCount);
+  const wishlistBadgeText = wishlistCount > 99 ? "99+" : String(wishlistCount);
+
+  useEffect(() => {
     const handleOutsideClick = (event) => {
       const insideDesktop = desktopSearchRef.current?.contains(event.target);
       const insideMobile = mobileSearchRef.current?.contains(event.target);
 
       if (!insideDesktop && !insideMobile) {
         setSearchFocused(false);
+        setShowSuggestions(false);
       }
     };
 
@@ -106,6 +190,7 @@ const Navbar = () => {
 
     navigate(`/shop?keyword=${encodeURIComponent(trimmedQuery)}`);
     setSearchFocused(false);
+    setShowSuggestions(false);
     setMobileMenuOpen(false);
   };
 
@@ -113,6 +198,27 @@ const Navbar = () => {
     setQuery(suggestion.name);
     navigate(`/shop?keyword=${encodeURIComponent(suggestion.name)}`);
     setSearchFocused(false);
+    setShowSuggestions(false);
+    setMobileMenuOpen(false);
+  };
+
+  const openProtected = (path) => {
+    if (isAuthenticated) {
+      navigate(path);
+      return;
+    }
+
+    navigate("/login", {
+      state: {
+        from: { pathname: path },
+        reason: "auth",
+      },
+    });
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
     setMobileMenuOpen(false);
   };
 
@@ -205,7 +311,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="absolute left-0 right-0 top-0 z-50">
+    <nav className={navShellClass}>
       {isSearchOpen && (
         <div className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-md"></div>
       )}
@@ -214,7 +320,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center">
             <Link to="/" className="cursor-pointer">
-              <h1 className="text-2xl font-bold text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.9)] [text-shadow:2px_2px_4px_rgb(0_0_0/80%)] md:text-3xl">
+              <h1 className={logoClass}>
                 Vaj
                 <span className="text-lime-400 drop-shadow-[0_0_10px_rgba(163,230,53,0.8)] [text-shadow:0_0_8px_rgb(163_230_53/60%)]">
                   ra
@@ -234,7 +340,9 @@ const Navbar = () => {
                 className={`absolute inset-0 rounded-full transition-all duration-500 ${
                   searchFocused
                     ? "bg-linear-to-r from-lime-400 via-[#24625cff] to-[#003438ff] opacity-20 blur-xl"
-                    : "opacity-0"
+                    : isHomePage
+                      ? "opacity-0"
+                      : "bg-linear-to-r from-[#c8d8c8] via-[#c9d8d4] to-[#c5d2d8] opacity-45 blur-xl"
                 }`}
               ></div>
               <div className="relative">
@@ -250,15 +358,22 @@ const Navbar = () => {
                 <input
                   type="text"
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setShowSuggestions(true);
+                  }}
                   placeholder="Search for products, brands and more..."
-                  onFocus={() => setSearchFocused(true)}
+                  onFocus={() => {
+                    setSearchFocused(true);
+                    setShowSuggestions(true);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       submitSearch();
                     }
                     if (event.key === "Escape") {
                       setSearchFocused(false);
+                      setShowSuggestions(false);
                     }
                   }}
                   className={`w-full rounded-full py-3.5 pl-12 pr-14 font-medium text-gray-800 placeholder-gray-400 transition-all duration-300 focus:outline-none ${
@@ -279,102 +394,132 @@ const Navbar = () => {
                 </button>
               </div>
 
-              {(searchFocused || trimmedQuery) && renderSearchPanel(false)}
+              {showSuggestions &&
+                (searchFocused || trimmedQuery) &&
+                renderSearchPanel(false)}
             </div>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
             <button
-              className="md:hidden p-2 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 rounded-lg transition-colors shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/20"
+              className={`md:hidden p-2 rounded-lg transition-colors ${
+                isHomePage
+                  ? "bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/20"
+                  : "bg-white text-[#243738] hover:bg-[#f6faf7] border border-[#d6dfd8] shadow-[0_6px_14px_rgba(15,23,42,0.1)]"
+              }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
-                <X className="w-6 h-6 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <X className="w-6 h-6" />
               ) : (
-                <Menu className="w-6 h-6 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <Menu className="w-6 h-6" />
               )}
             </button>
 
             <div className="hidden md:flex items-center gap-2 lg:gap-3">
               <button
                 onClick={() => navigate("/support")}
-                className="p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
+                className={iconWrapClass}
                 title="Customer Care"
               >
-                <Headphones className="w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Support
-                </span>
+                <Headphones className={iconClass} />
+                <span className={tooltipClass}>Support</span>
               </button>
 
               <button
-                onClick={() => navigate("/wishlist")}
-                className="p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
+                onClick={() => openProtected("/wishlist")}
+                className={iconWrapClass}
                 title="Wishlist"
               >
-                <Heart className="w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <Heart className={iconClass} />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-semibold">
-                  3
+                  {wishlistBadgeText}
                 </span>
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Wishlist
-                </span>
+                <span className={tooltipClass}>Wishlist</span>
               </button>
 
               <button
-                onClick={() => navigate("/cart")}
-                className="p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
+                onClick={() => openProtected("/cart")}
+                className={iconWrapClass}
                 title="Cart"
               >
-                <ShoppingCart className="w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <ShoppingCart className={iconClass} />
                 <span className="absolute -top-1 -right-1 bg-lime-400 text-gray-900 text-xs w-5 h-5 flex items-center justify-center rounded-full font-semibold">
-                  5
+                  {cartBadgeText}
                 </span>
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Cart
-                </span>
+                <span className={tooltipClass}>Cart</span>
               </button>
 
               <button
-                onClick={() => navigate("/settings")}
-                className="p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
+                onClick={() => openProtected("/settings")}
+                className={iconWrapClass}
                 title="Settings"
               >
-                <Settings className="w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Settings
-                </span>
+                <Settings className={iconClass} />
+                <span className={tooltipClass}>Settings</span>
               </button>
 
-              <button
-                onClick={() => navigate("/profile")}
-                className="p-2.5 bg-black/30 hover:bg-white backdrop-blur-sm rounded-full transition-all group relative shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_10px_rgba(163,230,53,0.8)] border border-white/20"
-                title="Profile"
-              >
-                <User className="w-5 h-5 text-white group-hover:text-[#124b4aff] transition-colors drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  Profile
-                </span>
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => openProtected("/profile")}
+                  className={iconWrapClass}
+                  title="Profile"
+                >
+                  <User className={iconClass} />
+                  <span className={tooltipClass}>Profile</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                    isHomePage
+                      ? "border border-white/50 bg-white/20 text-white backdrop-blur-sm hover:bg-white hover:text-[#124b4a]"
+                      : "border border-[#d6dfd8] bg-white text-[#1f3434] hover:bg-[#f7faf8]"
+                  }`}
+                >
+                  Login
+                </button>
+              )}
+
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] transition ${
+                    isHomePage
+                      ? "border border-white/50 bg-white/20 text-white backdrop-blur-sm hover:bg-white hover:text-[#124b4a]"
+                      : "border border-[#d6dfd8] bg-white text-[#1f3434] hover:bg-[#f7faf8]"
+                  }`}
+                >
+                  Logout
+                </button>
+              )}
             </div>
 
             <div className="md:hidden flex items-center gap-2">
               <button
-                onClick={() => navigate("/cart")}
-                className="p-2 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 rounded-lg relative shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/20"
+                onClick={() => openProtected("/cart")}
+                className={`p-2 rounded-lg relative border ${
+                  isHomePage
+                    ? "bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] border-white/20"
+                    : "bg-white text-[#243738] hover:bg-[#f7faf8] shadow-[0_6px_14px_rgba(15,23,42,0.1)] border-[#d6dfd8]"
+                }`}
               >
-                <ShoppingCart className="w-5 h-5 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <ShoppingCart className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 bg-lime-400 text-gray-900 text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold text-[10px]">
-                  5
+                  {cartBadgeText}
                 </span>
               </button>
               <button
-                onClick={() => navigate("/wishlist")}
-                className="p-2 bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 rounded-lg relative shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/20"
+                onClick={() => openProtected("/wishlist")}
+                className={`p-2 rounded-lg relative border ${
+                  isHomePage
+                    ? "bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 shadow-[0_0_15px_rgba(0,0,0,0.5)] border-white/20"
+                    : "bg-white text-[#243738] hover:bg-[#f7faf8] shadow-[0_6px_14px_rgba(15,23,42,0.1)] border-[#d6dfd8]"
+                }`}
               >
-                <Heart className="w-5 h-5 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
+                <Heart className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-bold text-[10px]">
-                  3
+                  {wishlistBadgeText}
                 </span>
               </button>
             </div>
@@ -389,15 +534,22 @@ const Navbar = () => {
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setShowSuggestions(true);
+              }}
               placeholder="Search products..."
-              onFocus={() => setSearchFocused(true)}
+              onFocus={() => {
+                setSearchFocused(true);
+                setShowSuggestions(true);
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {
                   submitSearch();
                 }
                 if (event.key === "Escape") {
                   setSearchFocused(false);
+                  setShowSuggestions(false);
                 }
               }}
               className="w-full pl-10 pr-20 py-3 rounded-full bg-white/95 backdrop-blur-xl text-gray-800 text-sm 
@@ -413,38 +565,81 @@ const Navbar = () => {
             </button>
           </div>
 
-          {(searchFocused || trimmedQuery) && renderSearchPanel(true)}
+          {showSuggestions &&
+            (searchFocused || trimmedQuery) &&
+            renderSearchPanel(true)}
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 bg-black/30 backdrop-blur-xl rounded-2xl p-4 space-y-2 shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-white/20">
+          <div
+            className={`md:hidden mt-4 rounded-2xl p-4 space-y-2 border ${
+              isHomePage
+                ? "bg-black/30 backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border-white/20"
+                : "bg-white shadow-[0_12px_30px_rgba(15,23,42,0.12)] border-[#d6dfd8]"
+            }`}
+          >
             <button
               onClick={() => navigate("/support")}
-              className="w-full flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition-colors text-white"
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                isHomePage
+                  ? "hover:bg-white/10 text-white"
+                  : "hover:bg-[#f2f7f3] text-[#223739]"
+              }`}
             >
-              <Headphones className="w-5 h-5 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-              <span className="drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] [text-shadow:2px_2px_4px_rgb(0_0_0_/80%)]">
-                Customer Care
-              </span>
+              <Headphones className="w-5 h-5" />
+              <span>Customer Care</span>
             </button>
             <button
-              onClick={() => navigate("/settings")}
-              className="w-full flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition-colors text-white"
+              onClick={() => openProtected("/settings")}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                isHomePage
+                  ? "hover:bg-white/10 text-white"
+                  : "hover:bg-[#f2f7f3] text-[#223739]"
+              }`}
             >
-              <Settings className="w-5 h-5 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-              <span className="drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] [text-shadow:2px_2px_4px_rgb(0_0_0_/80%)]">
-                Settings
-              </span>
+              <Settings className="w-5 h-5" />
+              <span>Settings</span>
             </button>
             <button
-              onClick={() => navigate("/profile")}
-              className="w-full flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg transition-colors text-white"
+              onClick={() => openProtected("/profile")}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                isHomePage
+                  ? "hover:bg-white/10 text-white"
+                  : "hover:bg-[#f2f7f3] text-[#223739]"
+              }`}
             >
-              <User className="w-5 h-5 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] filter:[drop-shadow(0_2px_4px_rgb(0_0_0))]" />
-              <span className="drop-shadow-[0_0_6px_rgba(255,255,255,0.8)] [text-shadow:2px_2px_4px_rgb(0_0_0_/80%)]">
-                Profile
-              </span>
+              <User className="w-5 h-5" />
+              <span>Profile</span>
             </button>
+
+            {!isAuthenticated ? (
+              <button
+                onClick={() => {
+                  navigate("/login");
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                  isHomePage
+                    ? "hover:bg-white/10 text-white"
+                    : "hover:bg-[#f2f7f3] text-[#223739]"
+                }`}
+              >
+                <User className="w-5 h-5" />
+                <span>Login / Register</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                  isHomePage
+                    ? "hover:bg-white/10 text-white"
+                    : "hover:bg-[#f2f7f3] text-[#223739]"
+                }`}
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
         )}
       </div>
