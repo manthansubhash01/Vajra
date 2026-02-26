@@ -101,7 +101,7 @@ const ProductSection = ({ section, navigate }) => {
           <ProductCard
             key={product._id}
             product={product}
-            onClick={() => navigate("/shop")}
+            onClick={() => navigate(`/product/${product.slug || product._id}`)}
           />
         ))}
       </div>
@@ -218,7 +218,9 @@ const Home = () => {
                   return (
                     <button
                       key={product._id}
-                      onClick={() => navigate("/shop")}
+                      onClick={() =>
+                        navigate(`/product/${product.slug || product._id}`)
+                      }
                       className={`group relative overflow-hidden rounded-4xl text-left ${index === 0 ? "min-h-130" : "min-h-90"}`}
                     >
                       <div className="absolute inset-0 bg-linear-to-br from-stone-200 via-stone-100 to-lime-100" />
