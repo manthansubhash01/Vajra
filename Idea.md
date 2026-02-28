@@ -41,16 +41,15 @@ Unlike traditional e-commerce platforms, VAJRA focuses on:
 - Product comparison
 - Product reviews & ratings
 
-## 3.5 AI Chatbot Assistance
+### 3.5 AI Chatbot Assistance
 - Resolve user query 
 - Direct user to required services
 
-## 3.6 Order Management
+### 3.6 Order Management
 - Track order
 - Order history
 
-## 3.7 Returns & Refunds system
-- 
+### 3.7 Returns & Refunds system 
 ---
 
 ## 4. Target Users
