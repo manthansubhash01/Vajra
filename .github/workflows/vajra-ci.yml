@@ -5,10 +5,9 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-  workflow_dispatch:
 
 jobs:
-  test-and-build:
+  backend-checks:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -40,9 +39,69 @@ jobs:
         working-directory: ./server
         run: npm ci
 
+      - name: Run Linter
+        working-directory: ./server
+        run: npm run lint
+
       - name: Run Tests
         working-directory: ./server
         run: npm test
         env:
           MONGO_URI_TEST: mongodb://localhost:27017/vajra_test
           JWT_SECRET: test_secret_key_for_ci
+
+  frontend-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install Client Dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Run Client Linter
+        working-directory: ./client
+        run: npm run lint
+
+      - name: Run Client Tests
+        working-directory: ./client
+        run: npm run test -- --run
+
+  docker-validation:
+    runs-on: ubuntu-latest
+    needs: [backend-checks, frontend-checks]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Backend Docker Image
+        run: docker build -t vajra-backend ./server
+
+      - name: Build Frontend Docker Image
+        run: docker build -t vajra-frontend ./client
+
+      - name: Smoke Test Backend Container
+        run: |
+          docker run -d --name vajra-backend-test \
+            -e PORT=5000 \
+            -p 5000:5000 vajra-backend
+          sleep 10
+          curl -f http://localhost:5000/api/health
+          docker rm -f vajra-backend-test
+
+      - name: Smoke Test Frontend Container
+        run: |
+          docker run -d --name vajra-frontend-test -p 5173:5173 vajra-frontend
+          sleep 10
+          curl -f http://localhost:5173
+          docker rm -f vajra-frontend-test
