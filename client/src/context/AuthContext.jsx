@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 
 const AUTH_STORAGE_KEY = "vajra_auth";
 
@@ -33,41 +39,50 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState(readStoredAuth);
 
-  const persistAuth = (nextState) => {
+  const persistAuth = useCallback((nextState) => {
     setAuthState(nextState);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextState));
-  };
+  }, []);
 
-  const login = ({ token, identity }) => {
-    const next = {
-      token,
-      user: identity,
-      interests: authState.interests || null,
-    };
+  const login = useCallback(
+    ({ token, identity }) => {
+      const next = {
+        token,
+        user: identity,
+        interests: authState.interests || null,
+      };
 
-    persistAuth(next);
-  };
+      persistAuth(next);
+    },
+    [authState.interests, persistAuth],
+  );
 
-  const register = ({ token, identity }) => {
-    const next = {
-      token,
-      user: identity,
-      interests: null,
-    };
+  const register = useCallback(
+    ({ token, identity }) => {
+      const next = {
+        token,
+        user: identity,
+        interests: null,
+      };
 
-    persistAuth(next);
-  };
+      persistAuth(next);
+    },
+    [persistAuth],
+  );
 
-  const saveInterests = (interests) => {
-    const next = {
-      ...authState,
-      interests,
-    };
+  const saveInterests = useCallback(
+    (interests) => {
+      const next = {
+        ...authState,
+        interests,
+      };
 
-    persistAuth(next);
-  };
+      persistAuth(next);
+    },
+    [authState, persistAuth],
+  );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     const cleared = {
       token: "",
       user: null,
@@ -75,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     persistAuth(cleared);
-  };
+  }, [persistAuth]);
 
   const value = useMemo(
     () => ({
@@ -89,7 +104,7 @@ export const AuthProvider = ({ children }) => {
       saveInterests,
       logout,
     }),
-    [authState],
+    [authState, login, logout, register, saveInterests],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

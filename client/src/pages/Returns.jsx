@@ -348,7 +348,7 @@ const Returns = () => {
               No return requests
             </h3>
             <p className="text-gray-500 mb-6">
-              You haven't created any return requests yet
+              You haven&apos;t created any return requests yet
             </p>
             <button
               onClick={() => navigate("/orders")}

@@ -569,7 +569,7 @@ const Shop = () => {
                     onClick={() => setHideCorrection(true)}
                     className="mt-0.5 text-xs text-[#2d6760] hover:underline"
                   >
-                    Search instead for "{keyword}"
+                    Search instead for &quot;{keyword}&quot;
                   </button>
                 </>
               ) : (

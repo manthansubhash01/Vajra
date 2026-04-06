@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -15,7 +15,7 @@ const Wishlist = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const fetchWishlist = async () => {
+  const fetchWishlist = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -39,11 +39,11 @@ const Wishlist = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchWishlist();
-  }, []);
+  }, [fetchWishlist]);
 
   const removeFromWishlist = async (productId) => {
     try {

@@ -1,12 +1,19 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 
 const getProductImage = (product, variantSku) => {
-  const variantImage = product?.variants?.find((item) => item.sku === variantSku)?.images?.[0];
-  return variantImage || product?.images?.[0] || product?.variants?.[0]?.images?.[0] || "";
+  const variantImage = product?.variants?.find(
+    (item) => item.sku === variantSku,
+  )?.images?.[0];
+  return (
+    variantImage ||
+    product?.images?.[0] ||
+    product?.variants?.[0]?.images?.[0] ||
+    ""
+  );
 };
 
 const Cart = () => {
@@ -17,7 +24,7 @@ const Cart = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -41,17 +48,19 @@ const Cart = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchCart();
-  }, []);
+  }, [fetchCart]);
 
   const subtotal = useMemo(
     () =>
       cartItems.reduce((total, item) => {
         const variantPrice =
-          item.product?.variants?.find((variant) => variant.sku === item.variantSku)?.price ||
+          item.product?.variants?.find(
+            (variant) => variant.sku === item.variantSku,
+          )?.price ||
           item.product?.minPrice ||
           0;
         return total + Number(variantPrice) * Number(item.quantity || 1);
@@ -184,11 +193,17 @@ const Cart = () => {
             <div className="h-72 animate-pulse rounded-4xl bg-white/90" />
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-red-200 bg-white p-6 text-red-600">{error}</div>
+          <div className="rounded-3xl border border-red-200 bg-white p-6 text-red-600">
+            {error}
+          </div>
         ) : cartItems.length === 0 ? (
           <section className="rounded-4xl border border-white/80 bg-white/92 p-10 text-center shadow-[0_16px_48px_rgba(15,23,42,0.08)]">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#24625c]">Cart is empty</p>
-            <h2 className="mt-3 text-2xl font-bold text-gray-900">No products added yet</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#24625c]">
+              Cart is empty
+            </p>
+            <h2 className="mt-3 text-2xl font-bold text-gray-900">
+              No products added yet
+            </h2>
             <button
               onClick={() => navigate("/shop")}
               className="mt-6 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-lime-400 hover:text-gray-900"
@@ -202,7 +217,9 @@ const Cart = () => {
               {cartItems.map((item) => {
                 const product = item.product;
                 const unitPrice =
-                  product?.variants?.find((variant) => variant.sku === item.variantSku)?.price ||
+                  product?.variants?.find(
+                    (variant) => variant.sku === item.variantSku,
+                  )?.price ||
                   product?.minPrice ||
                   0;
 
@@ -213,7 +230,9 @@ const Cart = () => {
                   >
                     <div className="flex flex-col gap-4 sm:flex-row">
                       <button
-                        onClick={() => navigate(`/product/${product?.slug || product?._id}`)}
+                        onClick={() =>
+                          navigate(`/product/${product?.slug || product?._id}`)
+                        }
                         className="h-32 w-full overflow-hidden rounded-2xl bg-gray-100 sm:w-32"
                       >
                         {getProductImage(product, item.variantSku) ? (
@@ -223,39 +242,63 @@ const Cart = () => {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-xs text-gray-500">No image</div>
+                          <div className="flex h-full items-center justify-center text-xs text-gray-500">
+                            No image
+                          </div>
                         )}
                       </button>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs uppercase tracking-[0.14em] text-gray-500">{product?.brand}</p>
+                        <p className="truncate text-xs uppercase tracking-[0.14em] text-gray-500">
+                          {product?.brand}
+                        </p>
                         <button
-                          onClick={() => navigate(`/product/${product?.slug || product?._id}`)}
+                          onClick={() =>
+                            navigate(
+                              `/product/${product?.slug || product?._id}`,
+                            )
+                          }
                           className="mt-1 text-left text-lg font-semibold text-gray-900 hover:text-[#1c4f48]"
                         >
                           {product?.name}
                         </button>
 
-                        <p className="mt-1 text-sm text-gray-600">SKU: {item.variantSku}</p>
+                        <p className="mt-1 text-sm text-gray-600">
+                          SKU: {item.variantSku}
+                        </p>
 
                         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                           <div className="inline-flex items-center rounded-full border border-[#d5dfd8] bg-[#f7fbf8]">
                             <button
-                              onClick={() => updateQuantity(item, Number(item.quantity || 1) - 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item,
+                                  Number(item.quantity || 1) - 1,
+                                )
+                              }
                               className="rounded-l-full px-3 py-1.5 text-gray-700"
                             >
                               <Minus className="h-3.5 w-3.5" />
                             </button>
-                            <span className="px-3 text-sm font-semibold text-gray-900">{item.quantity}</span>
+                            <span className="px-3 text-sm font-semibold text-gray-900">
+                              {item.quantity}
+                            </span>
                             <button
-                              onClick={() => updateQuantity(item, Number(item.quantity || 1) + 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item,
+                                  Number(item.quantity || 1) + 1,
+                                )
+                              }
                               className="rounded-r-full px-3 py-1.5 text-gray-700"
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>
                           </div>
 
-                          <p className="text-lg font-bold text-gray-900">₹{Number(unitPrice) * Number(item.quantity || 1)}</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            ₹{Number(unitPrice) * Number(item.quantity || 1)}
+                          </p>
                         </div>
                       </div>
 
@@ -272,7 +315,9 @@ const Cart = () => {
             </div>
 
             <aside className="h-fit rounded-3xl border border-white/80 bg-white/92 p-5 shadow-[0_14px_44px_rgba(15,23,42,0.08)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#24625c]">Order Summary</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#24625c]">
+                Order Summary
+              </p>
               <div className="mt-4 space-y-2 text-sm text-gray-700">
                 <div className="flex items-center justify-between">
                   <span>Items ({cartItems.length})</span>
