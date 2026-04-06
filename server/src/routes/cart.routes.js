@@ -2,11 +2,11 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middlewares/authentication.middleware");
 const {
-    addToCart,
-    getCart,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
+  addToCart,
+  getCart,
+  updateQuantity,
+  removeFromCart,
+  clearCart,
 } = require("../controllers/cart.controller");
 
 router.use(verifyToken);

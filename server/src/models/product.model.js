@@ -1,135 +1,135 @@
 const mongoose = require("mongoose");
 
 const variantSchema = new mongoose.Schema({
-    sku: {
-        type: String,
-        unique: true,
-        sparse: true
-    },
+  sku: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
 
-    size: String,
-    color: String,
-    flavor: String,
-    weight: String,
-    material: String,
-    resistance_level: String,
+  size: String,
+  color: String,
+  flavor: String,
+  weight: String,
+  material: String,
+  resistance_level: String,
 
-    price: {
-        type: Number,
-        required: true
-    },
+  price: {
+    type: Number,
+    required: true
+  },
 
-    stock: {
-        type: Number,
-        default: 0
-    },
+  stock: {
+    type: Number,
+    default: 0
+  },
 
-    images: [String]
+  images: [String]
 
 }, { _id: false });
 
 const productSchema = new mongoose.Schema({
 
-    name: {
-        type: String,
-        required: true,
-        trim: true
-    },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
 
-    slug: {
-        type: String,
-        unique: true
-    },
+  slug: {
+    type: String,
+    unique: true
+  },
 
-    description: {
-        type: String,
-        required: true
-    },
+  description: {
+    type: String,
+    required: true
+  },
 
-    category: {
-        type: String,
-        required: true,
-        enum: ["clothing", "accessory", "supplement", "equipment"],
-        index: true
-    },
+  category: {
+    type: String,
+    required: true,
+    enum: ["clothing", "accessory", "supplement", "equipment"],
+    index: true
+  },
 
-    brand: {
-        type: String,
-        index: true
-    },
+  brand: {
+    type: String,
+    index: true
+  },
 
-    images: [String],
+  images: [String],
 
-    gender: {
-        type: String,
-        enum: ["male", "female", "unisex"]
-    },
+  gender: {
+    type: String,
+    enum: ["male", "female", "unisex"]
+  },
 
-    variants: [variantSchema],
+  variants: [variantSchema],
 
-    minPrice: {
-        type: Number,
-        index: true
-    },
+  minPrice: {
+    type: Number,
+    index: true
+  },
 
-    maxPrice: {
-        type: Number,
-        index: true
-    },
+  maxPrice: {
+    type: Number,
+    index: true
+  },
 
-    totalStock: {
-        type: Number,
-        default: 0,
-        index: true
-    },
+  totalStock: {
+    type: Number,
+    default: 0,
+    index: true
+  },
 
-    attributes: {
-        type: Map,
-        of: String
-    },
+  attributes: {
+    type: Map,
+    of: String
+  },
 
-    rating: {
-        type: Number,
-        default: 0,
-        index: true
-    },
+  rating: {
+    type: Number,
+    default: 0,
+    index: true
+  },
 
-    numReviews: {
-        type: Number,
-        default: 0
-    },
+  numReviews: {
+    type: Number,
+    default: 0
+  },
 
-    totalSold: {
-        type: Number,
-        default: 0,
-        index: true
-    },
+  totalSold: {
+    type: Number,
+    default: 0,
+    index: true
+  },
 
-    isFeatured: {
-        type: Boolean,
-        default: false
-    },
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
 
-    isActive: {
-        type: Boolean,
-        default: true,
-        index: true
-    }
+  isActive: {
+    type: Boolean,
+    default: true,
+    index: true
+  }
 
 }, {
-    timestamps: true
+  timestamps: true
 });
 
 
 productSchema.index({
-    name: "text",
-    description: "text",
-    brand: "text",
-    category: "text",
-    "variants.flavor": "text",
-    "variants.weight": "text",
-    "variants.material": "text",
-    "variants.resistance_level": "text"
+  name: "text",
+  description: "text",
+  brand: "text",
+  category: "text",
+  "variants.flavor": "text",
+  "variants.weight": "text",
+  "variants.material": "text",
+  "variants.resistance_level": "text"
 });
 
 

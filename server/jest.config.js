@@ -1,8 +1,8 @@
 module.exports = {
-    testEnvironment: "node",
-    setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
-    testMatch: ["**/tests/**/*.test.js"],
-    collectCoverageFrom: ["src/**/*.js"],
-    coveragePathIgnorePatterns: ["/node_modules/"],
-    testTimeout: 10000,
+  testEnvironment: "node",
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.js"],
+  testMatch: ["**/tests/**/*.test.js"],
+  collectCoverageFrom: ["src/**/*.js"],
+  coveragePathIgnorePatterns: ["/node_modules/"],
+  testTimeout: 10000,
 };

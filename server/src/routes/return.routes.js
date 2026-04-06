@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middlewares/authentication.middleware");
 const {
-    createReturnRequest,
-    getUserReturns,
-    getReturnById,
-    cancelReturnRequest,
+  createReturnRequest,
+  getUserReturns,
+  getReturnById,
+  cancelReturnRequest,
 } = require("../controllers/return.controller");
 
 router.use(verifyToken);

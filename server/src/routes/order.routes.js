@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middlewares/authentication.middleware");
 const {
-    getUserOrders,
-    getOrderById,
-    createOrder,
-    cancelOrder,
+  getUserOrders,
+  getOrderById,
+  createOrder,
+  cancelOrder,
 } = require("../controllers/order.controller");
 
 router.use(verifyToken);

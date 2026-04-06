@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middlewares/authentication.middleware");
 const {
-    updateAddress,
-    updatePhone,
-    updatePassword,
-    getProfile,
+  updateAddress,
+  updatePhone,
+  updatePassword,
+  getProfile,
 } = require("../controllers/profile.controller");
 
 router.use(verifyToken);
